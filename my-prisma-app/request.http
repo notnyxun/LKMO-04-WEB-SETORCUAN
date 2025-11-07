@@ -18,6 +18,7 @@ Content-Type: application/json
 
 {
     "phone": "089988776655"
+    "walletNumber": "12345678"
 }
 
 ###
