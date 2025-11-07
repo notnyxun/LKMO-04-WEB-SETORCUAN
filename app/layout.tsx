@@ -11,7 +11,7 @@ const robotoMono = Roboto_Mono({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "SetorCuan - Tukar Sampah dengan Cuan",
   description: "Platform pertukaran sampah dengan sistem poin yang menguntungkan",
-  generator: "v0.app",
+  generator: "next",
 }
 
 export default function RootLayout({

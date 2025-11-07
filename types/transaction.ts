@@ -2,7 +2,7 @@ export interface WasteTransaction {
   id: string
   userId: string
   username: string
-  wasteType: "Plastik" | "Kardus" | "Kayu" | "Logam"
+  wasteType: "Plastik" | "Kardus" | "Kaca" 
   weight: number
   location: Location
   status: "pending" | "berhasil"

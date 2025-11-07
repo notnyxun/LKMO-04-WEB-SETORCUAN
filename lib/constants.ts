@@ -8,8 +8,7 @@ export const APP_CONFIG = {
 export const WASTE_PRICES: Record<string, number> = {
   Plastik: 5000,
   Kardus: 5000,
-  Kayu: 5000,
-  Logam: 8000,
+  Kaca: 5000,
 }
 
 export const MIN_WITHDRAWAL = 10000

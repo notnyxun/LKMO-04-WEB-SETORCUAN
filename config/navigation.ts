@@ -22,8 +22,7 @@ export const NAVIGATION_ROUTES = {
 export const WASTE_TYPES = [
   { value: "Plastik", label: "Plastik", pricePerKg: 5000 },
   { value: "Kardus", label: "Kardus", pricePerKg: 5000 },
-  { value: "Kayu", label: "Kayu", pricePerKg: 5000 },
-  { value: "Logam", label: "Logam", pricePerKg: 8000 },
+  { value: "Kaca", label: "Kaca", pricePerKg: 5000 },
 ]
 
 export const EWALLET_TYPES = [
