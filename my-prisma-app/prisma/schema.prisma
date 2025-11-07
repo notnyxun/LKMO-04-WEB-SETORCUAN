@@ -1,0 +1,83 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int          @id @default(autoincrement())
+  name         String
+  email        String       @unique
+  password     String
+  phone        String
+  walletNumber String
+  role         Role         @default(customer)
+  createdAt    DateTime     @default(now())
+  auditLogs    AuditLog[]
+  deposits     Deposit[]
+  withdrawals  Withdrawal[]
+}
+
+model Recyclable {
+  id         Int       @id @default(autoincrement())
+  name       String
+  pricePerKg Int
+  updatedBy  Int?
+  updatedAt  DateTime  @updatedAt
+  deposits   Deposit[]
+}
+
+model Deposit {
+  id           Int           @id @default(autoincrement())
+  userId       Int
+  recyclableId Int
+  weightKg     Float
+  totalCoin    Int
+  status       DepositStatus @default(pending)
+  validatedBy  Int?
+  createdAt    DateTime      @default(now())
+  recyclable   Recyclable    @relation(fields: [recyclableId], references: [id])
+  user         User          @relation(fields: [userId], references: [id])
+}
+
+model Withdrawal {
+  id           Int              @id @default(autoincrement())
+  userId       Int
+  amountCoin   Int
+  amountRupiah Int
+  status       WithdrawalStatus @default(pending)
+  proofUrl     String?
+  processedBy  Int?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  user         User             @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  action      String
+  targetTable String
+  targetId    Int
+  timestamp   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  customer
+  admin
+}
+
+enum DepositStatus {
+  pending
+  validated
+}
+
+enum WithdrawalStatus {
+  pending
+  processing
+  completed
+}

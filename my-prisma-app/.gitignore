@@ -1,0 +1,9 @@
+# File Sensitif & Konfigurasi
+.env
+.env.local
+
+# Folder Node.js yang Besar
+node_modules/
+
+# Folder yang Dibuat oleh Prisma
+/generated/
