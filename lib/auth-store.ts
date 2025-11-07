@@ -33,6 +33,8 @@ export interface User {
   coinRemaining: number
   transactions?: Transaction[]
   profileCompleted: boolean
+  firstName?: string 
+  lastName?: string
 }
 
 interface AuthStore {
@@ -63,6 +65,8 @@ const mockUsers: Record<string, { password: string; user: User }> = {
       username: "johndoe",
       email: "john@example.com",
       password: "password123",
+      firstName: "John",
+      lastName: "Doe",
       whatsapp: "081234567890",
       ewallet: "ovo",
       ewalletNumber: "081234567890",

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-green-500 to-green-400">
+    <main className="min-h-screen bg-gradient-to-b from-emerald-500 to-emerald-500">
       <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
         <div className="text-center">
           <h1 className="text-5xl md:text-6xl font-bold text-black mb-4">Welcome to SetorCuan!</h1>

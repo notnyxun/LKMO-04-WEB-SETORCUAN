@@ -17,9 +17,9 @@ function DashboardContent() {
   }
 
   return (
-    <main className="min-h-[calc(100vh-64px)] bg-green-500">
+    <main className="min-h-[calc(100vh-64px)] bg-emerald-500">
       {/* Profile Section */}
-      <div className="bg-green-500 text-white p-8">
+      <div className="bg-emerald-500 text-white p-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-8">
           <div className="flex items-center gap-8">
             <Image
@@ -37,11 +37,8 @@ function DashboardContent() {
           </div>
           <div className="flex gap-3">
             <Link href="/profile">
-              <Button className="bg-green-700 hover:bg-green-800">Edit Profile</Button>
+              <Button className="bg-green-700 hover:bg-green-800">Profile</Button>
             </Link>
-            <Button onClick={handleLogout} className="bg-red-600 hover:bg-red-700">
-              Logout
-            </Button>
           </div>
         </div>
       </div>

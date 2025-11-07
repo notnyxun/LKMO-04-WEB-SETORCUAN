@@ -52,4 +52,4 @@ export const MOCK_ADMIN_USER = {
   createdAt: new Date(),
 }
 
-export const POINT_CONVERSION_RATE = 1000 // 1000 points = 1 rupiah
+export const POINT_CONVERSION_RATE = 1
