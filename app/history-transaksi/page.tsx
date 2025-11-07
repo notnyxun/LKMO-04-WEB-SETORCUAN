@@ -7,13 +7,23 @@ import Link from "next/link"
 import { useState } from "react"
 
 function HistoryContent() {
-  const { user, getTransactions } = useAuthStore()
+  // 1. Mengambil getTransactionHistory
+  const { user, getTransactions, getTransactionHistory } = useAuthStore()
   const [filterStatus, setFilterStatus] = useState("all")
 
-  const transactions = user?.role === "admin" ? getTransactions() : getTransactions(user?.id)
+  // 2. Mengambil kedua daftar transaksi
+  const userId = user?.role === "admin" ? undefined : user?.id
+  const pendingTransactions = getTransactions(userId)
+  const historyTransactions = getTransactionHistory(userId)
 
+  // 3. Menggabungkan dan mengurutkan semua transaksi berdasarkan tanggal terbaru
+  const allTransactions = [...pendingTransactions, ...historyTransactions].sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  )
+
+  // 4. Filter sekarang diterapkan ke semua transaksi
   const filteredTransactions =
-    filterStatus === "all" ? transactions : transactions.filter((t) => t.status === filterStatus)
+    filterStatus === "all" ? allTransactions : allTransactions.filter((t) => t.status === filterStatus)
 
   const isAdmin = user?.role === "admin"
 
@@ -84,15 +94,15 @@ function HistoryContent() {
                           trans.status === "pending"
                             ? "bg-yellow-500"
                             : trans.status === "berhasil"
-                              ? "bg-green-600"
-                              : "bg-red-600"
+                            ? "bg-green-600"
+                            : "bg-red-600"
                         }`}
                       >
                         {trans.status === "pending"
                           ? "Pending"
                           : trans.status === "berhasil"
-                            ? "Berhasil"
-                            : "Dibatalkan"}
+                          ? "Berhasil"
+                          : "Dibatalkan"}
                       </span>
                     </td>
                     <td className="border border-gray-300 p-4 text-black text-sm">

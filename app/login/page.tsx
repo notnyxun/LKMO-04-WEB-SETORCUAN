@@ -7,6 +7,7 @@ import { useAuthStore } from "@/lib/auth-store"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
+import Image from "next/image"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -23,7 +24,11 @@ export default function LoginPage() {
       if (user?.profileCompleted === false) {
         router.push("/profile")
       } else {
-        router.push("/dashboard")
+        if (user?.role === "admin") {
+          router.push("/admin")
+        } else {
+          router.push("/dashboard")
+        }
       }
     }
   }, [isAuthenticated, user, router])
@@ -48,22 +53,19 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-green-500 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-4xl grid grid-cols-1 md:grid-cols-2">
-        <div className="hidden md:flex items-center justify-center p-8 bg-white">
-          
-          {/* Ganti placeholder di atas dengan komponen Image, contoh:
-            <Image 
-              src="/path-to-your-image.png" 
-              alt="Recycling" 
-              width={400} 
-              height={400} 
-              className="object-contain"
-            /> 
-          */}
+    <main className="h-[calc(100vh-64px)] bg-green-500 flex items-center justify-center">
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 m-4">
+        <div className="relative h-64 md:h-full w-full">
+          <Image
+            src="/image/login.jpg"
+            alt="Recycling"
+            fill
+            className="object-cover"
+            onError={(e) => (e.currentTarget.src = "https://placehold.co/600x600/a7f3d0/14532d?text=SetorCuan")}
+          />
         </div>
 
-        <div className="p-8 md:p-12 w-full">
+        <div className="p-8 md:p-12 w-full flex flex-col justify-center">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium mb-2 text-gray-700">Username</label>

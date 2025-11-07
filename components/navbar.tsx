@@ -25,23 +25,29 @@ export function Navbar() {
           </Link>
 
           {/* Menu */}
-          <div className="hidden md:flex gap-8">
-            <Link href="/" className="text-foreground hover:text-primary transition">
-              Home
-            </Link>
-            <Link href="/prices" className="text-foreground hover:text-primary transition">
-              Prices
-            </Link>
-            <Link href="/location" className="text-foreground hover:text-primary transition">
-              Locations
-            </Link>
-          </div>
+          {/* Tampilkan menu ini hanya jika tidak login, atau jika login sebagai 'user' */}
+          {user?.role !== "admin" && (
+            <div className="hidden md:flex gap-8">
+              <Link href="/" className="text-foreground hover:text-primary transition">
+                Home
+              </Link>
+              <Link href="/prices" className="text-foreground hover:text-primary transition">
+                Prices
+              </Link>
+              <Link href="/location" className="text-foreground hover:text-primary transition">
+                Locations
+              </Link>
+            </div>
+          )}
 
           {/* Auth Buttons */}
           <div className="flex gap-2">
             {isAuthenticated ? (
               <>
-                <span className="text-sm text-muted-foreground self-center">{user?.username}</span>
+                {/* Username hanya tampil untuk role 'user' */}
+                {user?.role === "user" && (
+                  <span className="text-sm text-muted-foreground self-center">{user?.username}</span>
+                )}
                 {user?.role === "user" && (
                   <Link href="/dashboard">
                     <Button variant="outline" size="sm" className="hover:bg-green-50 bg-transparent">
@@ -49,6 +55,7 @@ export function Navbar() {
                     </Button>
                   </Link>
                 )}
+                {/* Admin hanya melihat 'Admin Panel' dan 'Logout' */}
                 {user?.role === "admin" && (
                   <Link href="/admin">
                     <Button variant="outline" size="sm" className="hover:bg-green-50 bg-transparent">

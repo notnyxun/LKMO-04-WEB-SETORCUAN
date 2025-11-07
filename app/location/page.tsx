@@ -19,10 +19,7 @@ export default function LocationsPage() {
   }, [])
 
   return (
-    <div className="min-h-screen flex flex-col bg-emerald-500">
-      
-    
-
+    <div className="min-h-[calc(100vh-64px)] flex flex-col bg-emerald-500">
       {}
       <main className="flex-grow flex flex-col justify-center p-8 text-white">
         

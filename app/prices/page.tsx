@@ -3,14 +3,14 @@
 import Image from "next/image"
 
 const prices = [
-  { name: "Plastik", price: "Rp 5000/kg", image: "/images/plastik.png" },
-  { name: "Kardus", price: "Rp 5000/kg", image: "/images/kardus.png" },
-  { name: "Kaca", price: "Rp 5000/kg", image: "/images/kaca.png" },
+  { name: "Plastik", price: "Rp 5000/kg", image: "/image/plastik.jpg" },
+  { name: "Kardus", price: "Rp 5000/kg", image: "/image/kardus.jpg" },
+  { name: "Kaca", price: "Rp 5000/kg", image: "/image/kaca.jpg" },
 ]
 
 export default function PricesPage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-[calc(100vh-64px)] flex flex-col">
 
       <main className="flex-grow flex w-full">
         

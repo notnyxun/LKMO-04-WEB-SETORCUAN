@@ -5,6 +5,7 @@ import { useAuthStore } from "@/lib/auth-store"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import Image from "next/image" // Ditambahkan
 
 function DashboardContent() {
   const { user, logout } = useAuthStore()
@@ -21,7 +22,13 @@ function DashboardContent() {
       <div className="bg-green-500 text-white p-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-8">
           <div className="flex items-center gap-8">
-            <div className="w-24 h-24 bg-gray-300 rounded-full" />
+            <Image
+              src="/placeholder-user.jpg"
+              alt="User Avatar"
+              width={96}
+              height={96}
+              className="rounded-full bg-gray-300 w-24 h-24"
+            />
             <div>
               <h1 className="text-3xl font-bold">{user?.username}</h1>
               <p className="text-green-100">{user?.role}</p>

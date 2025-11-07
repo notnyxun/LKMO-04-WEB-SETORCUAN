@@ -7,46 +7,39 @@ import { useAuthStore } from "@/lib/auth-store"
 import { PrivateRoute } from "@/components/private-route"
 import { Button } from "@/components/ui/button"
 import { sendWhatsAppMessage } from "@/lib/fonnte"
+import Image from "next/image"
+import Link from "next/link"
+import { User, Wallet, History, Banknote, Landmark, Trash2 } from "lucide-react"
 
-function ProfileContent() {
-  const router = useRouter()
-  const { user, updateProfile, updatePassword } = useAuthStore()
-  const [activeTab, setActiveTab] = useState<"profile" | "password">("profile")
+type ActiveTab = "profile" | "billing" | "history"
+
+// Komponen untuk Konten Tab Profile
+function ProfileTabContent() {
+  const { user, updateProfile } = useAuthStore()
   const [formData, setFormData] = useState({
+    username: "",
+    firstName: "",
+    lastName: "",
     whatsapp: "",
-    ewallet: "ovo",
-    ewalletNumber: "",
-  })
-  const [passwordData, setPasswordData] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-    showCurrent: false,
-    showNew: false,
-    showConfirm: false,
   })
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
+  const [error, setError] = useState("")
 
   useEffect(() => {
     if (user) {
       setFormData({
+        username: user.username || "",
+        firstName: "", // Placeholder, karena tidak ada di auth-store
+        lastName: "", // Placeholder, karena tidak ada di auth-store
         whatsapp: user.whatsapp || "",
-        ewallet: user.ewallet || "ovo",
-        ewalletNumber: user.ewalletNumber || "",
       })
     }
   }, [user])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
-  }
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setPasswordData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleSubmitProfile = async (e: React.FormEvent) => {
@@ -55,281 +48,247 @@ function ProfileContent() {
     setSuccess("")
     setLoading(true)
 
-    if (!formData.whatsapp || !formData.ewalletNumber) {
-      setError("Semua field harus diisi")
+    if (!formData.whatsapp) {
+      setError("Nomor Whatsapp harus diisi")
       setLoading(false)
       return
     }
 
+    // Hanya update data yang ada di auth-store
     updateProfile({
       whatsapp: formData.whatsapp,
-      ewallet: formData.ewallet,
-      ewalletNumber: formData.ewalletNumber,
-      profileCompleted: true,
+      // username tidak bisa diubah di sini
     })
 
     await sendWhatsAppMessage(formData.whatsapp, `Halo ${user?.username}! Profile kamu berhasil diupdate di SetorCuan.`)
 
     setSuccess("Profile berhasil disimpan!")
-    setTimeout(() => {
-      if (!user?.profileCompleted) {
-        router.push("/dashboard")
-      }
-    }, 1500)
-    setLoading(false)
-  }
-
-  const handleSubmitPassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setSuccess("")
-    setLoading(true)
-
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError("Password baru dan konfirmasi tidak cocok")
-      setLoading(false)
-      return
-    }
-
-    if (passwordData.newPassword.length < 6) {
-      setError("Password minimal 6 karakter")
-      setLoading(false)
-      return
-    }
-
-    const success = updatePassword(passwordData.currentPassword, passwordData.newPassword)
-    if (!success) {
-      setError("Password saat ini salah")
-      setLoading(false)
-      return
-    }
-
-    setSuccess("Password berhasil diubah!")
-    setPasswordData({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-      showCurrent: false,
-      showNew: false,
-      showConfirm: false,
-    })
     setLoading(false)
   }
 
   return (
-    <main className="min-h-screen bg-white">
-      <div className="max-w-2xl mx-auto p-8">
-        <h1 className="text-4xl font-bold mb-2">Pengaturan Profile</h1>
-        <p className="text-gray-600 mb-8">
-          {user?.profileCompleted
-            ? "Edit informasi pribadi Anda"
-            : "Silakan lengkapi informasi pribadi Anda untuk melanjutkan"}
-        </p>
+    <div>
+      <h1 className="text-4xl font-bold text-black mb-8">Account Settings</h1>
+      <div className="bg-white p-8 rounded-2xl shadow-lg">
+        <form onSubmit={handleSubmitProfile} className="space-y-6">
+          <div>
+            <label className="block text-lg font-medium mb-2 text-gray-700">Username</label>
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              disabled
+              className="w-full bg-gray-200 rounded-md p-4 border border-gray-300 text-gray-600"
+            />
+          </div>
+          <div>
+            <label className="block text-lg font-medium mb-2 text-gray-700">First Name</label>
+            <input
+              type="text"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              className="w-full bg-gray-200 rounded-md p-4 border border-gray-300"
+              placeholder="Masukkan nama depan"
+            />
+          </div>
+          <div>
+            <label className="block text-lg font-medium mb-2 text-gray-700">Last Name</label>
+            <input
+              type="text"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              className="w-full bg-gray-200 rounded-md p-4 border border-gray-300"
+              placeholder="Masukkan nama belakang"
+            />
+          </div>
+          <div>
+            <label className="block text-lg font-medium mb-2 text-gray-700">Nomor Whatsapp</label>
+            <input
+              type="tel"
+              name="whatsapp"
+              value={formData.whatsapp}
+              onChange={handleChange}
+              className="w-full bg-gray-200 rounded-md p-4 border border-gray-300"
+              placeholder="08xxxxxxxxxx"
+            />
+          </div>
 
-        <div className="flex gap-4 mb-8 border-b border-gray-200">
-          <button
-            onClick={() => setActiveTab("profile")}
-            className={`px-4 py-2 font-medium border-b-2 ${
-              activeTab === "profile"
-                ? "border-green-600 text-green-600"
-                : "border-transparent text-gray-600 hover:text-black"
-            }`}
-          >
-            Data Pribadi
-          </button>
-          <button
-            onClick={() => setActiveTab("password")}
-            className={`px-4 py-2 font-medium border-b-2 ${
-              activeTab === "password"
-                ? "border-green-600 text-green-600"
-                : "border-transparent text-gray-600 hover:text-black"
-            }`}
-          >
-            Ubah Password
-          </button>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {success && <p className="text-green-600 text-sm">{success}</p>}
+
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={loading}
+              className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium"
+            >
+              {loading ? "Loading..." : "Save Changes"}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// Komponen untuk Konten Tab Billing
+function BillingTabContent() {
+  const { user } = useAuthStore()
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold text-black">E-Wallet & Bank Information</h1>
+        <Link href="/history-transaksi">
+          <Button className="bg-green-700 hover:bg-green-800 text-white">Bank Transaction History</Button>
+        </Link>
+      </div>
+      <div className="bg-white p-8 rounded-2xl shadow-lg">
+        {/* E-Wallet Section */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
+            <div>
+              <h2 className="text-2xl font-semibold text-black">E-Wallet</h2>
+              <p className="text-gray-600">Masukkan Informasi E-Wallet anda untuk transaksi</p>
+            </div>
+            <Button className="bg-green-600 hover:bg-green-700 text-white">+ Add E-Wallet</Button>
+          </div>
+
+          {user?.ewallet && user?.ewalletNumber ? (
+            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg mt-4">
+              <div className="flex items-center gap-4">
+                <div className="bg-blue-100 p-2 rounded-full">
+                  <Wallet className="text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-bold text-lg text-black">{user.ewallet.toUpperCase()}</p>
+                  <p className="text-gray-600">{user.ewalletNumber}</p>
+                </div>
+              </div>
+              <Button variant="link" className="text-red-600">
+                Remove
+              </Button>
+            </div>
+          ) : (
+            <p className="text-gray-500 mt-4">Tidak ada E-Wallet yang terdaftar.</p>
+          )}
         </div>
 
-        {/* Profile Tab */}
-        {activeTab === "profile" && (
-          <form onSubmit={handleSubmitProfile} className="space-y-6 bg-gray-50 p-8 rounded-lg border border-gray-200">
+        <hr className="my-8 border-gray-200" />
+
+        {/* Bank Section */}
+        <div>
+          <div className="flex justify-between items-center mb-2">
             <div>
-              <label className="block text-sm font-medium mb-2">Username</label>
-              <input
-                type="text"
-                value={user?.username || ""}
-                disabled
-                className="w-full bg-gray-200 rounded-md p-3 border border-gray-300 text-gray-600"
-              />
+              <h2 className="text-2xl font-semibold text-black">Bank</h2>
+              <p className="text-gray-600">Masukkan Informasi Bank anda untuk transaksi</p>
             </div>
+            <Button className="bg-green-600 hover:bg-green-700 text-white">+ Add Bank Account</Button>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
-              <input
-                type="email"
-                value={user?.email || ""}
-                disabled
-                className="w-full bg-gray-200 rounded-md p-3 border border-gray-300 text-gray-600"
-              />
+          <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg mt-4 text-center">
+            <div className="bg-gray-200 p-4 rounded-full mb-4">
+              <Landmark className="text-gray-600 w-8 h-8" />
             </div>
+            <p className="text-lg font-medium text-gray-700">Tidak ada bank yang tercatat</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Nomor WhatsApp</label>
-              <input
-                type="tel"
-                name="whatsapp"
-                value={formData.whatsapp}
-                onChange={handleChange}
-                className="w-full bg-gray-200 rounded-md p-3 border border-gray-300"
-                placeholder="08xxxxxxxxxx"
-              />
-            </div>
+// Komponen untuk Konten Tab History
+function HistoryTabContent() {
+  const { user } = useAuthStore()
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Tipe E-Wallet/Rekening</label>
-              <select
-                name="ewallet"
-                value={formData.ewallet}
-                onChange={handleChange}
-                className="w-full bg-gray-200 rounded-md p-3 border border-gray-300"
-              >
-                <option value="ovo">OVO</option>
-                <option value="gopay">GoPay</option>
-                <option value="dana">DANA</option>
-                <option value="bank">Bank Transfer</option>
-              </select>
-            </div>
+  return (
+    <div>
+      <h1 className="text-4xl font-bold text-black mb-2">Record Daur Ulang</h1>
+      <p className="text-lg text-gray-700 mb-8">Track Progress Daur Ulangmu!</p>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Nomor E-Wallet/Rekening</label>
-              <input
-                type="text"
-                name="ewalletNumber"
-                value={formData.ewalletNumber}
-                onChange={handleChange}
-                className="w-full bg-gray-200 rounded-md p-3 border border-gray-300"
-                placeholder="Masukkan nomor rekening/e-wallet"
-              />
-            </div>
+      <div className="bg-white p-8 rounded-2xl shadow-lg">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg">
+            <p className="text-xl text-gray-700">Total Daur Ulang (kg)</p>
+            <p className="text-4xl font-bold text-black">{user?.totalKg}</p>
+          </div>
+          <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg">
+            <p className="text-xl text-gray-700">Total Penukaran Koin</p>
+            <p className="text-4xl font-bold text-black">{user?.totalCoins}</p>
+          </div>
+          <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg">
+            <p className="text-xl text-gray-700">Total Koin yang Diperoleh</p>
+            <p className="text-4xl font-bold text-black">{user?.coinExchanged}</p>
+          </div>
+          <div className="flex items-center justify-between p-6 border border-gray-200 rounded-lg">
+            <p className="text-xl text-gray-700">Total Uang yang Diterima</p>
+            <p className="text-4xl font-bold text-black">Rp {user?.coinRemaining * 1000}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            {success && <p className="text-green-600 text-sm">{success}</p>}
+// Komponen Utama Halaman Profile
+function ProfileContent() {
+  const { user } = useAuthStore()
+  const [activeTab, setActiveTab] = useState<ActiveTab>("profile")
 
-            <div className="flex gap-4">
-              <Button
-                type="submit"
-                disabled={loading}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-md font-medium"
-              >
-                {loading ? "Loading..." : "Simpan Profile"}
-              </Button>
-              {user?.profileCompleted && (
-                <Button type="button" onClick={() => router.push("/dashboard")} variant="outline" className="flex-1">
-                  Batal
-                </Button>
-              )}
-            </div>
-          </form>
-        )}
+  const getButtonClass = (tabName: ActiveTab) => {
+    return activeTab === tabName
+      ? "bg-green-600 text-white"
+      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+  }
 
-        {activeTab === "password" && (
-          <form onSubmit={handleSubmitPassword} className="space-y-6 bg-gray-50 p-8 rounded-lg border border-gray-200">
-            <div>
-              <label className="block text-sm font-medium mb-2">Password Saat Ini</label>
-              <div className="relative">
-                <input
-                  type={passwordData.showCurrent ? "text" : "password"}
-                  name="currentPassword"
-                  value={passwordData.currentPassword}
-                  onChange={handlePasswordChange}
-                  className="w-full bg-gray-200 rounded-md p-3 border border-gray-300 pr-10"
-                  placeholder="Masukkan password saat ini"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setPasswordData((prev) => ({ ...prev, showCurrent: !prev.showCurrent }))}
-                  className="absolute right-3 top-3 text-gray-600 hover:text-black"
-                >
-                  {passwordData.showCurrent ? "🙈" : "👁️"}
-                </button>
-              </div>
-            </div>
+  return (
+    <main className="min-h-[calc(100vh-64px)] flex bg-white">
+      {/* Sidebar Kiri */}
+      <div className="w-1/4 min-w-[280px] bg-white p-8 border-r border-gray-200 flex flex-col items-center">
+        <Image
+          src="/placeholder-user.jpg"
+          alt="User Avatar"
+          width={128}
+          height={128}
+          className="rounded-full bg-gray-300 w-32 h-32 mb-4"
+        />
+        <h2 className="text-2xl font-bold text-black">{user?.username}</h2>
+        <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-sm font-medium my-2">User</span>
+        <p className="text-gray-500 text-sm">Your ID: {user?.id}</p>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Password Baru</label>
-              <div className="relative">
-                <input
-                  type={passwordData.showNew ? "text" : "password"}
-                  name="newPassword"
-                  value={passwordData.newPassword}
-                  onChange={handlePasswordChange}
-                  className="w-full bg-gray-200 rounded-md p-3 border border-gray-300 pr-10"
-                  placeholder="Masukkan password baru"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setPasswordData((prev) => ({ ...prev, showNew: !prev.showNew }))}
-                  className="absolute right-3 top-3 text-gray-600 hover:text-black"
-                >
-                  {passwordData.showNew ? "🙈" : "👁️"}
-                </button>
-              </div>
-            </div>
+        <nav className="w-full space-y-4 mt-12">
+          <Button
+            onClick={() => setActiveTab("profile")}
+            className={`w-full justify-start h-14 text-lg ${getButtonClass("profile")}`}
+          >
+            <User className="mr-3" />
+            Profile
+          </Button>
+          <Button
+            onClick={() => setActiveTab("billing")}
+            className={`w-full justify-start h-14 text-lg ${getButtonClass("billing")}`}
+          >
+            <Wallet className="mr-3" />
+            Billing
+          </Button>
+          <Button
+            onClick={() => setActiveTab("history")}
+            className={`w-full justify-start h-14 text-lg ${getButtonClass("history")}`}
+          >
+            <History className="mr-3" />
+            History
+          </Button>
+        </nav>
+      </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-2">Konfirmasi Password Baru</label>
-              <div className="relative">
-                <input
-                  type={passwordData.showConfirm ? "text" : "password"}
-                  name="confirmPassword"
-                  value={passwordData.confirmPassword}
-                  onChange={handlePasswordChange}
-                  className="w-full bg-gray-200 rounded-md p-3 border border-gray-300 pr-10"
-                  placeholder="Konfirmasi password baru"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setPasswordData((prev) => ({ ...prev, showConfirm: !prev.showConfirm }))}
-                  className="absolute right-3 top-3 text-gray-600 hover:text-black"
-                >
-                  {passwordData.showConfirm ? "🙈" : "👁️"}
-                </button>
-              </div>
-            </div>
-
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            {success && <p className="text-green-600 text-sm">{success}</p>}
-
-            <div className="flex gap-4">
-              <Button
-                type="submit"
-                disabled={loading}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-md font-medium"
-              >
-                {loading ? "Loading..." : "Ubah Password"}
-              </Button>
-              <Button
-                type="button"
-                onClick={() =>
-                  setPasswordData({
-                    currentPassword: "",
-                    newPassword: "",
-                    confirmPassword: "",
-                    showCurrent: false,
-                    showNew: false,
-                    showConfirm: false,
-                  })
-                }
-                variant="outline"
-                className="flex-1"
-              >
-                Reset
-              </Button>
-            </div>
-          </form>
-        )}
+      {/* Konten Kanan */}
+      <div className="w-3/4 bg-green-100 p-12 overflow-y-auto">
+        {activeTab === "profile" && <ProfileTabContent />}
+        {activeTab === "billing" && <BillingTabContent />}
+        {activeTab === "history" && <HistoryTabContent />}
       </div>
     </main>
   )
