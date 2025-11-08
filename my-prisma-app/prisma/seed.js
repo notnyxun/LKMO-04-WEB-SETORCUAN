@@ -1,3 +1,5 @@
+// File: my-prisma-app/prisma/seed.js
+
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
 const prisma = new PrismaClient();
@@ -49,7 +51,7 @@ async function main() {
     await prisma.user.create({
       data: {
         username: 'admin',
-        email: 'admin@setorcuan.com', // Email ini harus unik
+        email: 'admin@setorcuan.com',
         password: hashedPassword,
         role: 'admin',
         profileCompleted: true,
