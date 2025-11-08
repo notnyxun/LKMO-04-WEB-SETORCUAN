@@ -3,9 +3,9 @@ const { PrismaClient } = require('@prisma/client');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const multer = require('multer'); // Import multer
-const path = require('path'); // Import path
-const fs = require('fs'); // Import fs
+const multer = require('multer'); 
+const path = require('path'); 
+const fs = require('fs'); 
 
 const prisma = new PrismaClient();
 const app = express();
@@ -29,7 +29,7 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 // Konfigurasi Multer (Penyimpanan File)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir); // Simpan di 'public/uploads'
+    cb(null, uploadDir); 
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
@@ -47,6 +47,7 @@ const LOCATIONS = [
 ];
 
 async function seedData() {
+  // 1. Seed Recyclables
   const recyclableCount = await prisma.recyclable.count();
   if (recyclableCount === 0) {
     console.log("Seeding Recyclables...");
@@ -59,6 +60,7 @@ async function seedData() {
     });
   }
 
+  // 2. Seed Locations
   const locationCount = await prisma.location.count();
   if (locationCount === 0) {
     console.log("Seeding Locations...");
@@ -67,33 +69,42 @@ async function seedData() {
     });
   }
 
+  // 3. Seed Admin User
   console.log("Mencari admin user...");
-  const adminUser = await prisma.user.findUnique({
-    where: { username: 'admin' },
-  });
-
-  if (!adminUser) {
-    console.log("Admin user not found, creating one...");
-    const hashedPassword = await bcrypt.hash('admin123', saltRounds);
-    await prisma.user.create({
-      data: {
-        username: 'admin',
-        email: 'admin@setorcuan.com',
-        password: hashedPassword,
-        role: 'admin',
-        profileCompleted: true,
-      },
+  try {
+    const adminUser = await prisma.user.findUnique({
+      where: { username: 'admin' },
     });
-    console.log("Admin user created successfully (admin/admin123).");
-  } else {
-    console.log("Admin user already exists.");
+
+    if (!adminUser) {
+      console.log("Admin user not found, creating one...");
+      const hashedPassword = await bcrypt.hash('admin123', saltRounds);
+      await prisma.user.create({
+        data: {
+          username: 'admin',
+          email: 'admin@setorcuan.com', 
+          password: hashedPassword,
+          role: 'admin',
+          profileCompleted: true,
+        },
+      });
+      console.log("Admin user created successfully (admin/admin123).");
+    } else {
+      console.log("Admin user already exists.");
+    }
+  } catch (error) {
+    console.error("Error seeding admin user:", error);
+    if (error.code === 'P2002') {
+      console.error("Pastikan email 'admin@setorcuan.com' tidak digunakan oleh user lain.");
+    }
   }
 }
 
+// Jalankan seeder saat server start
 seedData().catch(e => console.error("Seeding data gagal:", e));
 
 
-// --- Middleware Otentikasi (INI YANG HILANG) ---
+// --- Middleware Otentikasi (INI YANG HILANG SEBELUMNYA) ---
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -107,7 +118,7 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// --- Middleware Cek Admin (INI YANG HILANG) ---
+// --- Middleware Cek Admin (INI YANG HILANG SEBELUMNYA) ---
 const isAdmin = (req, res, next) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: "Akses ditolak. Memerlukan role admin." });
@@ -197,7 +208,6 @@ app.post('/api/auth/login', async (req, res) => {
 // --- ENDPOINT USER (TERPROTEKSI) ---
 // =================================
 
-// Middleware ini SEKARANG sudah terdefinisi di atas
 app.use('/api/user', authenticateToken);
 
 app.get('/api/user/profile', async (req, res) => {
@@ -416,7 +426,9 @@ app.get('/api/admin/transactions', async (req, res) => {
       ewallet: null,
       ewalletNumber: null,
       createdAt: d.createdAt.toISOString(),
-      user: d.user
+      user: d.user,
+      harga: d.totalCoin, 
+      berat: d.weightKg, 
     }));
     
     const formattedWithdrawals = withdrawals.map(w => ({
@@ -432,7 +444,9 @@ app.get('/api/admin/transactions', async (req, res) => {
       ewalletNumber: w.user.ewalletNumber,
       proofUrl: w.proofUrl,
       createdAt: w.createdAt.toISOString(),
-      user: w.user
+      user: w.user,
+      harga: w.amountCoin, 
+      berat: null,
     }));
 
     const allTransactions = [...formattedDeposits, ...formattedWithdrawals]
@@ -573,7 +587,12 @@ app.post('/api/admin/points/adjust', async (req, res) => {
 });
 
 
-// Server Listener
-app.listen(PORT, () => {
-  console.log(`🚀 Server backend berjalan di http://localhost:${PORT}`);
-});
+// Server Listener (Hanya untuk lokal, Vercel tidak pakai ini)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server berjalan di http://localhost:${PORT}`);
+  });
+}
+
+// Ekspor untuk Vercel
+module.exports = app;
