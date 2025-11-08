@@ -1,0 +1,43 @@
+### Uji 1: Membuat Pengguna Baru (CREATE)
+# Pastikan Anda menguji ini saat database kosong atau ubah email
+POST http://localhost:4000/api/users
+Content-Type: application/json
+
+{
+  "name": "Budi Santoso",
+  "email": "budi.santoso@contoh.com",
+  "password": "passwordAman123",
+  "phone": "081234567890",
+  "walletNumber": "789012345"
+}
+
+###
+
+### Uji 2: Mengambil Semua Pengguna (READ ALL)
+GET http://localhost:4000/api/users
+
+###
+
+### Uji 3: Mengambil Satu Pengguna (READ ONE)
+# Ganti :id dengan ID pengguna yang baru dibuat (misalnya, 1)
+GET http://localhost:4000/api/users/1
+
+###
+
+### Uji 4: Memperbarui Nomor Telepon (UPDATE)
+# Pastikan ID 1 ada
+PATCH http://localhost:4000/api/users/1
+Content-Type: application/json
+
+{
+    "phone": "089988776655",
+    "walletNumber": "123456789"
+}
+
+###
+
+### Uji 5: Menghapus Pengguna (DELETE)
+# Hati-hati, ini akan menghapus data
+DELETE http://localhost:4000/api/users/1
+### Uji Verifikasi READ: Memastikan ID 1 Hilang
+GET http://localhost:4000/api/users/1

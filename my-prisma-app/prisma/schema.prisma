@@ -1,0 +1,123 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int          @id @default(autoincrement())
+  username        String       @unique
+  email           String       @unique
+  password        String
+  firstName       String?
+  lastName        String?
+  whatsapp        String?
+  ewallet         String? // 'Gopay', 'OVO', 'Dana', 'LinkAja'
+  ewalletNumber   String?
+  role            Role         @default(customer)
+  profileCompleted Boolean     @default(false)
+  
+  // Poin dan Statistik
+  totalCoins      Int          @default(0) // Poin user saat ini
+  totalKg         Float        @default(0) // Total kg sampah ditukar
+  coinExchanged   Int          @default(0) // Total poin yg pernah didapat
+  coinRemaining   Int          @default(0) // Sisa koin (mungkin sama dengan totalCoins, tergantung logika)
+
+  createdAt       DateTime     @default(now())
+  
+  // Relasi
+  auditLogs       AuditLog[]
+  deposits        Deposit[]
+  withdrawals     Withdrawal[]
+}
+
+model Location {
+  id        String   @id @default(uuid())
+  name      String
+  lat       Float
+  lng       Float
+  address   String?
+  deposits  Deposit[]
+}
+
+model Recyclable {
+  id         Int       @id @default(autoincrement())
+  name       String    // 'plastik', 'kardus', 'kaca'
+  pricePerKg Int
+  updatedBy  Int?
+  updatedAt  DateTime  @updatedAt
+  deposits   Deposit[]
+}
+
+model Deposit {
+  id           String        @id @default(uuid())
+  weightKg     Float
+  totalCoin    Int           // Poin yang didapat dari transaksi ini
+  status       DepositStatus @default(pending)
+  kategori     String        // 'plastik', 'kardus', 'kaca'
+  
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  
+  // Relasi
+  user         User          @relation(fields: [userId], references: [id])
+  userId       Int
+  recyclable   Recyclable    @relation(fields: [recyclableId], references: [id])
+  recyclableId Int
+  location     Location      @relation(fields: [locationId], references: [id])
+  locationId   String
+  
+  validatedBy   Int? // Admin ID
+}
+
+model Withdrawal {
+  id           String           @id @default(uuid())
+  amountCoin   Int              // Jumlah koin yang ditarik
+  amountRupiah Int              // Jumlah rupiah yang didapat
+  status       WithdrawalStatus @default(pending)
+  proofUrl     String?
+  
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  // Relasi
+  user         User             @relation(fields: [userId], references: [id])
+  userId       Int
+  processedBy  Int? // Admin ID
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  action      String
+  targetTable String
+  targetId    Int
+  timestamp   DateTime @default(now())
+  
+  // Relasi
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+}
+
+enum Role {
+  customer
+  admin
+}
+
+enum DepositStatus {
+  pending
+  validated
+  cancelled
+}
+
+enum WithdrawalStatus {
+  pending
+  processing
+  completed
+  cancelled
+}
