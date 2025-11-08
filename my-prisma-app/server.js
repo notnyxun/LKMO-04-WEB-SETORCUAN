@@ -38,73 +38,10 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
+// --- Fungsi seedData() TELAH DIHAPUS DARI SINI ---
+// --- dan dipindahkan ke prisma/seed.js ---
 
-// --- DATA MASTER & Seeder ---
-const LOCATIONS = [
-  { id: "lokasi1", name: "Bank Sampah SetorCuan - Pulau Damar", lat: -5.376526338272906, lng: 105.28818970242115, address: "Jl. Pulau Damar Gg. Nusa Satu No.23" },
-  { id: "lokasi2", name: "Bank Sampah SetorCuan - Raden Saleh", lat: -5.3646679769006695, lng: 105.29603722423592, address: "Jl. Raden Saleh, Way Huwi" },
-  { id: "lokasi3", name: "Bank Sampah SetorCuan - ITERA", lat: -5.3609809417718, lng: 105.32137968044056, address: "Jl. Terusan Ryacudu, Way Huwi" },
-];
-
-async function seedData() {
-  // 1. Seed Recyclables
-  const recyclableCount = await prisma.recyclable.count();
-  if (recyclableCount === 0) {
-    console.log("Seeding Recyclables...");
-    await prisma.recyclable.createMany({
-      data: [
-        { name: "plastik", pricePerKg: 5000 },
-        { name: "kardus", pricePerKg: 4000 },
-        { name: "kaca", pricePerKg: 7000 },
-      ],
-    });
-  }
-
-  // 2. Seed Locations
-  const locationCount = await prisma.location.count();
-  if (locationCount === 0) {
-    console.log("Seeding Locations...");
-    await prisma.location.createMany({
-      data: LOCATIONS.map(l => ({ id: l.id, name: l.name, lat: l.lat, lng: l.lng, address: l.address })),
-    });
-  }
-
-  // 3. Seed Admin User
-  console.log("Mencari admin user...");
-  try {
-    const adminUser = await prisma.user.findUnique({
-      where: { username: 'admin' },
-    });
-
-    if (!adminUser) {
-      console.log("Admin user not found, creating one...");
-      const hashedPassword = await bcrypt.hash('admin123', saltRounds);
-      await prisma.user.create({
-        data: {
-          username: 'admin',
-          email: 'admin@setorcuan.com', 
-          password: hashedPassword,
-          role: 'admin',
-          profileCompleted: true,
-        },
-      });
-      console.log("Admin user created successfully (admin/admin123).");
-    } else {
-      console.log("Admin user already exists.");
-    }
-  } catch (error) {
-    console.error("Error seeding admin user:", error);
-    if (error.code === 'P2002') {
-      console.error("Pastikan email 'admin@setorcuan.com' tidak digunakan oleh user lain.");
-    }
-  }
-}
-
-// Jalankan seeder saat server start
-seedData().catch(e => console.error("Seeding data gagal:", e));
-
-
-// --- Middleware Otentikasi (INI YANG HILANG SEBELUMNYA) ---
+// --- Middleware Otentikasi ---
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
@@ -118,7 +55,7 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-// --- Middleware Cek Admin (INI YANG HILANG SEBELUMNYA) ---
+// --- Middleware Cek Admin ---
 const isAdmin = (req, res, next) => {
   if (req.user.role !== 'admin') {
     return res.status(403).json({ error: "Akses ditolak. Memerlukan role admin." });
