@@ -247,13 +247,13 @@ function AdminContent() {
                         onClick={() => handleSuccessTransaction(trans.id)}
                         className="bg-green-600 hover:bg-green-700 text-white text-xs py-1 px-2 h-auto"
                       >
-                        Berhasil
+                        Approve
                       </Button>
                       <Button
                         onClick={() => handleCancelTransaction(trans.id)}
                         className="bg-red-600 hover:bg-red-700 text-white text-xs py-1 px-2 h-auto"
                       >
-                        Batal
+                        Reject
                       </Button>
                     </div>
                   </div>

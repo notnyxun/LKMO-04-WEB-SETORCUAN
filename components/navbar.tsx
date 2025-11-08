@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useAuthStore } from "@/lib/auth-store"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 
 export function Navbar() {
   const router = useRouter()
@@ -20,7 +21,13 @@ export function Navbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gray-300 rounded-full" />
+            <Image
+              src="/image/logo.jpg"
+              alt="SetorCuan Logo"
+              width={32}
+              height={32}
+              className="rounded-full"
+            />
             <span className="font-bold text-lg">SetorCuan</span>
           </Link>
 

@@ -8,17 +8,32 @@ import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import Link from "next/link"
 import { User, Wallet, Landmark, Eye, EyeOff } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { EWALLET_TYPES } from "@/config/navigation"
 
 type ActiveTab = "profile" | "billing"
 
-// Komponen untuk Konten Tab Profile (Account Settings + Ubah Password)
 function ProfileTabContent() {
   const { user, updateProfile, updatePassword } = useAuthStore()
 
-  // State untuk mode edit
   const [isEditing, setIsEditing] = useState(false)
 
-  // State untuk Account Settings
   const [formData, setFormData] = useState({
     username: "",
     firstName: "",
@@ -29,7 +44,6 @@ function ProfileTabContent() {
   const [successProfile, setSuccessProfile] = useState("")
   const [errorProfile, setErrorProfile] = useState("")
 
-  // State untuk Ubah Password
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
@@ -40,13 +54,12 @@ function ProfileTabContent() {
   const [successPassword, setSuccessPassword] = useState("")
   const [errorPassword, setErrorPassword] = useState("")
 
-  // [PERBAIKAN 1] - useEffect sekarang membaca firstName/lastName dari store
   useEffect(() => {
     if (user) {
       setFormData({
         username: user.username || "",
-        firstName: user.firstName || "", // <-- DIUBAH
-        lastName: user.lastName || "",   // <-- DIUBAH
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
         whatsapp: user.whatsapp || "",
       })
     }
@@ -66,23 +79,20 @@ function ProfileTabContent() {
     setShowPassword((prev) => ({ ...prev, [field]: !prev[field] }))
   }
 
-  // Handler untuk Batal Edit
   const handleCancelEdit = () => {
     setIsEditing(false)
     setErrorProfile("")
     setSuccessProfile("")
-    // Reset form ke data user
     if (user) {
       setFormData({
         username: user.username || "",
-        firstName: user.firstName || "", // <-- DIUBAH
-        lastName: user.lastName || "",   // <-- DIUBAH
+        firstName: user.firstName || "",
+        lastName: user.lastName || "",
         whatsapp: user.whatsapp || "",
       })
     }
   }
 
-  // [PERBAIKAN 2] - handleSubmitProfile sekarang mengirim firstName/lastName
   const handleSubmitProfile = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorProfile("")
@@ -97,16 +107,15 @@ function ProfileTabContent() {
 
     updateProfile({
       whatsapp: formData.whatsapp,
-      firstName: formData.firstName, // <-- DIUBAH
-      lastName: formData.lastName,   // <-- DIUBAH
+      firstName: formData.firstName,
+      lastName: formData.lastName,
     })
 
     setSuccessProfile("Profile berhasil disimpan!")
     setLoadingProfile(false)
-    setIsEditing(false) // Nonaktifkan mode edit setelah berhasil
+    setIsEditing(false)
   }
 
-  // Submit Handler untuk Ubah Password
   const handleSubmitPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorPassword("")
@@ -138,7 +147,6 @@ function ProfileTabContent() {
 
   return (
     <div className="space-y-8">
-      {/* Account Settings */}
       <div>
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-bold text-black">Account Settings</h1>
@@ -163,7 +171,7 @@ function ProfileTabContent() {
                 </Button>
                 <Button
                   type="submit"
-                  form="profileForm" // Tautkan ke form
+                  form="profileForm"
                   disabled={loadingProfile}
                   className="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-medium"
                 >
@@ -231,13 +239,10 @@ function ProfileTabContent() {
 
             {errorProfile && <p className="text-red-500 text-sm">{errorProfile}</p>}
             {successProfile && <p className="text-green-600 text-sm">{successProfile}</p>}
-
-            {/* Tombol Save Changes di bawah form dihapus, pindah ke atas */}
           </form>
         </div>
       </div>
 
-      {/* Ubah Password */}
       <div>
         <h2 className="text-3xl font-bold text-black mb-8">Ubah Password</h2>
         <div className="bg-white p-8 rounded-2xl shadow-lg">
@@ -325,72 +330,284 @@ function ProfileTabContent() {
   )
 }
 
-// Komponen untuk Konten Tab Billing (E-Wallet & Bank)
+type BankAccount = {
+  bankName: string;
+  accountNumber: string;
+}
+
 function BillingTabContent() {
-  const { user } = useAuthStore()
+  const { user, updateProfile } = useAuthStore()
+  
+  const [isEwalletModalOpen, setIsEwalletModalOpen] = useState(false)
+  const [isBankModalOpen, setIsBankModalOpen] = useState(false)
+  
+  const [ewalletData, setEwalletData] = useState({
+    type: user?.ewallet || "Gopay",
+    number: user?.ewalletNumber || "",
+  })
+  
+  const [bankData, setBankData] = useState<BankAccount>({
+    bankName: "",
+    accountNumber: "",
+  })
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([])
+
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState("")
+
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(""), 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [success])
+
+  useEffect(() => {
+    if (isEwalletModalOpen) {
+      setEwalletData({
+        type: user?.ewallet || "Gopay",
+        number: user?.ewalletNumber || "",
+      })
+    }
+  }, [isEwalletModalOpen, user])
+
+
+  const handleSaveEwallet = async () => {
+    setLoading(true)
+    await updateProfile({
+      ewallet: ewalletData.type,
+      ewalletNumber: ewalletData.number,
+      profileCompleted: true,
+    })
+    setLoading(false)
+    setIsEwalletModalOpen(false)
+    setSuccess("E-Wallet berhasil diperbarui!")
+  }
+
+  const handleRemoveEwallet = async () => {
+    await updateProfile({
+      ewallet: "",
+      ewalletNumber: "",
+    })
+    setSuccess("E-Wallet berhasil dihapus.")
+  }
+
+  const handleSaveBank = () => {
+    setLoading(true)
+    setBankAccounts(prev => [...prev, bankData])
+    
+    setLoading(false)
+    setIsBankModalOpen(false)
+    setSuccess("Rekening bank berhasil ditambahkan!")
+    setBankData({ bankName: "", accountNumber: "" })
+  }
+
+  const handleRemoveBank = (accountNumber: string) => {
+    setBankAccounts(prev => prev.filter(bank => bank.accountNumber !== accountNumber));
+    setSuccess("Rekening bank berhasil dihapus.");
+  }
+
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-bold text-black">E-Wallet & Bank Information</h1>
-      </div>
-      <div className="bg-white p-8 rounded-2xl shadow-lg">
-        {/* E-Wallet Section */}
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <div>
-              <h2 className="text-2xl font-semibold text-black">E-Wallet</h2>
-              <p className="text-gray-600">Masukkan Informasi E-Wallet anda untuk transaksi</p>
-            </div>
-            <Button className="bg-green-600 hover:bg-green-700 text-white">+ Add E-Wallet</Button>
-          </div>
+    <>
+      <div>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold text-black">E-Wallet & Bank Information</h1>
+        </div>
 
-          {user?.ewallet && user?.ewalletNumber ? (
-            <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg mt-4">
-              <div className="flex items-center gap-4">
-                <div className="bg-blue-100 p-2 rounded-full">
-                  <Wallet className="text-blue-600" />
-                </div>
-                <div>
-                  <p className="font-bold text-lg text-black">{user.ewallet.toUpperCase()}</p>
-                  <p className="text-gray-600">{user.ewalletNumber}</p>
-                </div>
+        {success && (
+          <div className="bg-green-100 border border-green-400 text-green-700 p-3 rounded-md text-sm mb-6">
+            {success}
+          </div>
+        )}
+
+        <div className="bg-white p-8 rounded-2xl shadow-lg">
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <div>
+                <h2 className="text-2xl font-semibold text-black">E-Wallet</h2>
+                <p className="text-gray-600">Masukkan Informasi E-Wallet anda untuk transaksi</p>
               </div>
-              <Button variant="link" className="text-red-600">
-                Remove
+              <Button 
+                onClick={() => setIsEwalletModalOpen(true)}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {user?.ewalletNumber ? "Edit E-Wallet" : "+ Add E-Wallet"}
               </Button>
             </div>
-          ) : (
-            <p className="text-gray-500 mt-4">Tidak ada E-Wallet yang terdaftar.</p>
-          )}
-        </div>
 
-        <hr className="my-8 border-gray-200" />
-
-        {/* Bank Section */}
-        <div>
-          <div className="flex justify-between items-center mb-2">
-            <div>
-              <h2 className="text-2xl font-semibold text-black">Bank</h2>
-              <p className="text-gray-600">Masukkan Informasi Bank anda untuk transaksi</p>
-            </div>
-            <Button className="bg-green-600 hover:bg-green-700 text-white">+ Add Bank Account</Button>
+            {user?.ewallet && user?.ewalletNumber ? (
+              <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg mt-4">
+                <div className="flex items-center gap-4">
+                  <div className="bg-blue-100 p-2 rounded-full">
+                    <Wallet className="text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg text-black">{user.ewallet.toUpperCase()}</p>
+                    <p className="text-gray-600">{user.ewalletNumber}</p>
+                  </div>
+                </div>
+                <Button 
+                  variant="link" 
+                  className="text-red-600"
+                  onClick={handleRemoveEwallet}
+                >
+                  Remove
+                </Button>
+              </div>
+            ) : (
+              <p className="text-gray-500 mt-4 text-center py-4">Tidak ada E-Wallet yang terdaftar.</p>
+            )}
           </div>
 
-          <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg mt-4 text-center">
-            <div className="bg-gray-200 p-4 rounded-full mb-4">
-              <Landmark className="text-gray-600 w-8 h-8" />
+          <hr className="my-8 border-gray-200" />
+
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <div>
+                <h2 className="text-2xl font-semibold text-black">Bank</h2>
+                <p className="text-gray-600">Masukkan Informasi Bank anda untuk transaksi</p>
+              </div>
+              <Button 
+                onClick={() => setIsBankModalOpen(true)}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                + Add Bank Account
+              </Button>
             </div>
-            <p className="text-lg font-medium text-gray-700">Tidak ada bank yang tercatat</p>
+
+            {bankAccounts.length > 0 ? (
+              <div className="space-y-4 mt-4">
+                {bankAccounts.map((bank) => (
+                  <div key={bank.accountNumber} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div className="bg-blue-100 p-2 rounded-full">
+                        <Landmark className="text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-lg text-black">{bank.bankName.toUpperCase()}</p>
+                        <p className="text-gray-600">{bank.accountNumber}</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant="link" 
+                      className="text-red-600"
+                      onClick={() => handleRemoveBank(bank.accountNumber)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg mt-4 text-center">
+                <div className="bg-gray-200 p-4 rounded-full mb-4">
+                  <Landmark className="text-gray-600 w-8 h-8" />
+                </div>
+                <p className="text-lg font-medium text-gray-700">Tidak ada bank yang tercatat</p>
+                <p className="text-sm text-gray-500">Klik 'Add Bank Account' untuk menambahkan.</p>
+              </div>
+            )}
+
           </div>
         </div>
       </div>
-    </div>
+
+      <Dialog open={isEwalletModalOpen} onOpenChange={setIsEwalletModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Tambah / Edit E-Wallet</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="ewallet-type" className="text-right">
+                Tipe
+              </Label>
+              <Select
+                value={ewalletData.type}
+                onValueChange={(value) => setEwalletData(prev => ({ ...prev, type: value }))}
+              >
+                <SelectTrigger id="ewallet-type" className="col-span-3">
+                  <SelectValue placeholder="Pilih E-Wallet" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EWALLET_TYPES.map((wallet) => (
+                    <SelectItem key={wallet.value} value={wallet.value}>
+                      {wallet.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="ewallet-number" className="text-right">
+                Nomor
+              </Label>
+              <Input
+                id="ewallet-number"
+                value={ewalletData.number}
+                onChange={(e) => setEwalletData(prev => ({ ...prev, number: e.target.value }))}
+                className="col-span-3"
+                placeholder="08..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Batal</Button>
+            </DialogClose>
+            <Button type="submit" onClick={handleSaveEwallet} disabled={loading}>
+              {loading ? "Menyimpan..." : "Simpan Perubahan"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isBankModalOpen} onOpenChange={setIsBankModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Tambah Rekening Bank</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="bank-name" className="text-right">
+                Nama Bank
+              </Label>
+              <Input
+                id="bank-name"
+                value={bankData.bankName}
+                onChange={(e) => setBankData(prev => ({ ...prev, bankName: e.target.value }))}
+                className="col-span-3"
+                placeholder="Contoh: BCA"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="account-number" className="text-right">
+                Nomor Rek.
+              </Label>
+              <Input
+                id="account-number"
+                value={bankData.accountNumber}
+                onChange={(e) => setBankData(prev => ({ ...prev, accountNumber: e.target.value }))}
+                className="col-span-3"
+                placeholder="1234567890"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">Batal</Button>
+            </DialogClose>
+            <Button type="submit" onClick={handleSaveBank} disabled={loading}>
+              {loading ? "Menyimpan..." : "Simpan Rekening"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
 
-
-// Komponen Utama Halaman Profile
 function ProfileContent() {
   const { user } = useAuthStore()
   const [activeTab, setActiveTab] = useState<ActiveTab>("profile")
@@ -403,7 +620,6 @@ function ProfileContent() {
 
   return (
     <main className="min-h-[calc(100vh-64px)] flex bg-white">
-      {/* Sidebar Kiri */}
       <div className="w-1/4 min-w-[280px] bg-white p-8 border-r border-gray-200 flex flex-col items-center">
         <Image
           src="/placeholder-user.jpg"
@@ -412,7 +628,6 @@ function ProfileContent() {
           height={128}
           className="rounded-full bg-gray-300 w-32 h-32 mb-4"
         />
-        {/* Menampilkan nama lengkap jika ada, jika tidak, tampilkan username */}
         <h2 className="text-2xl font-bold text-black text-center">
           {user?.firstName || user?.lastName ? `${user.firstName} ${user.lastName}`.trim() : user?.username}
         </h2>
@@ -437,7 +652,6 @@ function ProfileContent() {
         </nav>
       </div>
 
-      {/* Konten Kanan */}
       <div className="w-3/4 bg-green-100 p-12 overflow-y-auto">
         {activeTab === "profile" && <ProfileTabContent />}
         {activeTab === "billing" && <BillingTabContent />}

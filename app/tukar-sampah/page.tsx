@@ -1,10 +1,11 @@
 "use client"
 
+// 1. Impor `useMemo`
 import type React from "react"
+import { useState, useMemo } from "react" // Pastikan useMemo diimpor
 import { PrivateRoute } from "@/components/private-route"
 import { useAuthStore } from "@/lib/auth-store"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
 import { sendWhatsAppMessage } from "@/lib/fonnte"
 import Link from "next/link"
 
@@ -15,7 +16,13 @@ const LOCATIONS = [
 ]
 
 function TukarSampahContent() {
-  const { user, addTransaction, get } = useAuthStore()
+  // ▼▼▼ 2. PISAHKAN PENGAMBILAN DATA DAN FUNGSI ▼▼▼
+  // Ambil fungsi (stabil)
+  const { user, addTransaction, getNextTransactionId } = useAuthStore()
+  // Ambil data (reaktif)
+  const pendingTransactions = useAuthStore((state) => state.transactions)
+  // ▲▲▲ ----------------------------------------- ▲▲▲
+  
   const [formData, setFormData] = useState({
     kategori: "plastik",
     berat: "",
@@ -24,6 +31,15 @@ function TukarSampahContent() {
   })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [submitError, setSubmitError] = useState("")
+
+  const hasPendingSampah = useMemo(() => {
+    if (!user) return false
+
+    return pendingTransactions
+      .filter(t => t.userId === user.id)
+      .some(t => t.type === "sampah")
+  }, [pendingTransactions, user])
 
   const poinSampah: Record<string, number> = {
     plastik: 5000,
@@ -38,19 +54,26 @@ function TukarSampahContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitError("") 
+    setSuccess(false)
 
-    if (!formData.locationId) {
-      alert("Pilih lokasi pengambilan terlebih dahulu")
+    if (hasPendingSampah) {
+      setSubmitError("Kamu sudah memiliki penukaran yang sedang diproses. Tunggu hingga statusnya berubah sebelum menukar lagi.")
       return
     }
 
-    setLoading(true)
+    if (!formData.locationId) {
+      setSubmitError("Pilih lokasi pengambilan terlebih dahulu") 
+      return
+    }
+
+    setLoading(true) 
 
     const poin = Number(formData.berat) * poinSampah[formData.kategori]
     const selectedLocation = LOCATIONS.find((l) => l.id === formData.locationId)
 
     const transaction = {
-      id: `TRX-${String(get().transactions.length + 1).padStart(3, "0")}`,
+      id: getNextTransactionId(), 
       type: "sampah" as const,
       userId: user?.id || "",
       username: user?.username || "",
@@ -76,6 +99,7 @@ function TukarSampahContent() {
       setSuccess(false)
       setFormData({ kategori: "plastik", berat: "", deskripsi: "", locationId: "" })
     }, 3000)
+
 
     setLoading(false)
   }
@@ -106,6 +130,7 @@ function TukarSampahContent() {
                   value={formData.kategori}
                   onChange={handleChange}
                   className="w-full bg-gray-100 border border-gray-300 rounded-md p-3"
+                  disabled={hasPendingSampah || loading}
                 >
                   <option value="plastik">Plastik</option>
                   <option value="kardus">Kardus</option>
@@ -124,6 +149,7 @@ function TukarSampahContent() {
                   className="w-full bg-gray-100 border border-gray-300 rounded-md p-3"
                   placeholder="Contoh: 5"
                   required
+                  disabled={hasPendingSampah || loading}
                 />
               </div>
 
@@ -135,6 +161,7 @@ function TukarSampahContent() {
                   onChange={handleChange}
                   className="w-full bg-gray-100 border border-gray-300 rounded-md p-3"
                   required
+                  disabled={hasPendingSampah || loading}
                 >
                   <option value="">-- Pilih Lokasi --</option>
                   {LOCATIONS.map((loc) => (
@@ -153,10 +180,11 @@ function TukarSampahContent() {
                   onChange={handleChange}
                   className="w-full bg-gray-100 border border-gray-300 rounded-md p-3 h-20"
                   placeholder="Deskripsi sampah atau catatan tambahan"
+                  disabled={hasPendingSampah || loading}
                 />
               </div>
 
-              {formData.berat && (
+              {formData.berat && !hasPendingSampah && (
                 <div className="bg-green-100 border border-green-400 rounded-md p-4">
                   <p className="text-sm text-gray-700">
                     <strong>Total Poin:</strong> {Number(formData.berat) * poinSampah[formData.kategori]} poin
@@ -166,7 +194,19 @@ function TukarSampahContent() {
                   </p>
                 </div>
               )}
+              
+              {hasPendingSampah && !success && (
+                <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 p-3 rounded-md text-sm">
+                  Kamu sudah memiliki penukaran yang sedang diproses. Tunggu hingga statusnya berubah sebelum menukar lagi.
+                </div>
+              )}
 
+              {submitError && (
+                <div className="bg-red-100 border border-red-400 text-red-700 p-3 rounded-md text-sm">
+                  {submitError}
+                </div>
+              )}
+              
               {success && (
                 <div className="bg-green-100 border border-green-400 text-green-700 p-3 rounded-md text-sm">
                   ✓ Permintaan tukar sampah berhasil dikirim! Status: Pending. Admin akan menghubungi kamu segera.
@@ -175,10 +215,10 @@ function TukarSampahContent() {
 
               <Button
                 type="submit"
-                disabled={loading || !formData.berat || !formData.locationId}
+                disabled={loading || !formData.berat || !formData.locationId || hasPendingSampah}
                 className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-md font-medium"
               >
-                {loading ? "Mengirim..." : "Kirim Permintaan"}
+                {loading ? "Mengirim..." : (hasPendingSampah ? "Penukaran Diproses" : "Kirim Permintaan")}
               </Button>
             </form>
           </div>
